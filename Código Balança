@@ -1,0 +1,56 @@
+#include <TinyWireM.h>                  // Biblioteca I2C para ATtiny85
+#include <LiquidCrystal_I2C_ByVac.h>    // Biblioteca para o display LCD
+
+// Configuração do display LCD (endereço 0x27, dimensões 16x2)
+LiquidCrystal_I2C_ByVac lcd(0x27, 16, 2);
+
+// Configuração do pino analógico
+const int pinSinal = A2;  // Pino analógico conectado ao Vout do amplificador
+
+// Variáveis de calibração
+float vRef = 5.0;              // Tensão de referência do ADC (normalmente 5V no Digispark)
+float fatorCalibracao = 0.01;  // Fator de calibração para converter tensão (V) em peso (kg)
+
+// Variáveis auxiliares
+float peso;   // Peso calculado
+float tensao; // Tensão lida no pino analógico
+
+void setup() {
+  // Inicializar o LCD
+  lcd.begin();
+  lcd.backlight();
+  lcd.setCursor(0, 0);
+  lcd.print("Calibrando...");
+  delay(2000);
+  lcd.clear();
+
+  // Mensagem de inicialização
+  lcd.setCursor(0, 0);
+  lcd.print("Pronto");
+  delay(1000);
+  lcd.clear();
+}
+
+void loop() {
+  // Ler o valor analógico do pino A2
+  int valorADC = analogRead(pinSinal);
+
+  // Converter o valor do ADC para tensão
+  tensao = (valorADC / 1023.0) * vRef;
+
+  // Converter a tensão para peso usando o fator de calibração
+  peso = tensao / fatorCalibracao;
+
+  // Exibir no display
+  lcd.setCursor(0, 0);
+  lcd.print("Tensao: ");
+  lcd.print(tensao, 2); // Exibir tensão com 2 casas decimais
+
+  lcd.setCursor(0, 1);
+  lcd.print("Peso: ");
+  if (peso < 0) peso = 0; // Evitar valores negativos
+  lcd.print(peso, 2);     // Exibir peso com 2 casas decimais
+  lcd.print(" kg");
+
+  delay(500); // Atualizar a cada 500ms
+}
